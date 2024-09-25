@@ -31,5 +31,8 @@
     "nodemon": "^2.0.16",
     "razorpay": "^2.8.3",
     "stripe": "^8.222.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
   }
 }

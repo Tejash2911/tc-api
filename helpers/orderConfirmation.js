@@ -1,8 +1,8 @@
-export const createOrderTemplate = (order) => {
-  const { products, userInfo, price, orderStatus, _id } = order;
-  const RazorPayFeePercent = 0.02; //2%
-  const RazorPayFee = Math.ceil(price * RazorPayFeePercent); // in inr
-  const TotalPriceWithRazorPayFee = price + RazorPayFee;
+export const createOrderTemplate = order => {
+  const { products, userInfo, price, orderStatus, _id } = order
+  const RazorPayFeePercent = 0.02 //2%
+  const RazorPayFee = Math.ceil(price * RazorPayFeePercent) // in inr
+  const TotalPriceWithRazorPayFee = price + RazorPayFee
   return `
     <!DOCTYPE html>
     <html>
@@ -105,20 +105,20 @@ export const createOrderTemplate = (order) => {
                         </tr>
                         <tr>
                             <td>Order Status: </td>
-                            <td style="text-align: right;"><strong>${orderStatus || "Pending"}</strong></td>
+                            <td style="text-align: right;"><strong>${orderStatus || 'Pending'}</strong></td>
                         </tr>           
                     </tbody>
                 </table>
                 <hr/>
                 <table class='products'>
                     <tbody>
-                        ${products.map((p) => {
+                        ${products.map(p => {
                           return `
                                 <tr class='info'>     
                                     <td>${p.title}</td>
                                     <td style="text-align: right;"><strong>${p.price * p.quantity}</strong></td>
                                 </tr>    
-                            `;
+                            `
                         })}  
                         <tr class='info'>     
                             <td>Transaction fee</td>
@@ -136,8 +136,8 @@ export const createOrderTemplate = (order) => {
         </div>
     </body>
     </html>
-    `;
-};
+    `
+}
 
 export const createResetEmailHTML = (userName, url) => {
   return `
@@ -175,5 +175,5 @@ export const createResetEmailHTML = (userName, url) => {
         </div>
       </body>
     </html>
-    `;
-};
+    `
+}

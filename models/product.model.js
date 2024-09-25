@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
 const productSchema = new mongoose.Schema(
   {
@@ -6,7 +6,7 @@ const productSchema = new mongoose.Schema(
     productNo: { type: String, required: true, unique: true, index: true },
     desc: { type: String, required: true },
     img: { type: mongoose.Schema.Types.Mixed, required: true },
-    categories: { type: Array, default: "electronics" },
+    categories: { type: Array, default: 'electronics' },
     size: { type: Array },
     color: { type: Array },
     price: { type: Number, required: true },
@@ -16,13 +16,13 @@ const productSchema = new mongoose.Schema(
     ratingsAverage: {
       type: Number,
       default: 0,
-      max: [5, "Rating must be below 5.0"],
-      set: (val) => Math.round(val * 10) / 10,
-    },
+      max: [5, 'Rating must be below 5.0'],
+      set: val => Math.round(val * 10) / 10
+    }
   },
   { timestamps: true }
-);
+)
 
-const Product = mongoose.model("Product", productSchema);
+const Product = mongoose.model('Product', productSchema)
 
-export default Product;
+export default Product

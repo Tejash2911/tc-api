@@ -1,5 +1,5 @@
-import { config as conf } from "dotenv";
-conf();
+import { config as conf } from 'dotenv'
+conf()
 
 const _config = {
   port: process.env.PORT,
@@ -17,7 +17,7 @@ const _config = {
   razorPayKeySecret: process.env.RAZORPAY_KEY_SECRET,
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
-  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
-};
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME
+}
 
-export const config = Object.freeze(_config);
+export const config = Object.freeze(_config)

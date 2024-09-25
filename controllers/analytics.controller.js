@@ -1,21 +1,29 @@
-import ConfirmOrder from "../models/ConfirmOrder.model.js";
-import Product from "../models/product.model.js";
+import ConfirmOrder from '../models/ConfirmOrder.model.js'
+import Product from '../models/product.model.js'
 
 export const getTopProducts = async (req, res) => {
-  const condition = req.query.for;
+  const condition = req.query.for
 
   // i don't need much data if i am getting for charts that's why added conditionally project and add field
-  const project = condition !== "chart" ? { img: 1, title: 1, purchasedCount: 1, price: 1, _id: 0 } : { title: 1, purchasedCount: 1, _id: 0 };
-  const addField = condition !== "chart" ? { revenue: { $multiply: ["$price", "$purchasedCount"] } } : {};
+  const project =
+    condition !== 'chart'
+      ? { img: 1, title: 1, purchasedCount: 1, price: 1, _id: 0 }
+      : { title: 1, purchasedCount: 1, _id: 0 }
+  const addField = condition !== 'chart' ? { revenue: { $multiply: ['$price', '$purchasedCount'] } } : {}
 
   try {
-    const products = await Product.aggregate([{ $sort: { purchasedCount: -1 } }, { $limit: 5 }, { $project: project }, { $addFields: addField }]);
-    res.status(200).json(products);
+    const products = await Product.aggregate([
+      { $sort: { purchasedCount: -1 } },
+      { $limit: 5 },
+      { $project: project },
+      { $addFields: addField }
+    ])
+    res.status(200).json(products)
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "internal server error" });
+    console.log(error)
+    res.status(500).json({ message: 'internal server error' })
   }
-};
+}
 
 export const getSales = async (req, res) => {
   try {
@@ -23,55 +31,55 @@ export const getSales = async (req, res) => {
       {
         $group: {
           _id: null,
-          totalRevenue: { $sum: "$price" },
-          totalProductsSold: { $sum: { $size: "$products" } },
-          averageOrderValue: { $avg: "$price" },
-          maxOrderValue: { $max: "$price" },
-        },
-      },
-    ]);
+          totalRevenue: { $sum: '$price' },
+          totalProductsSold: { $sum: { $size: '$products' } },
+          averageOrderValue: { $avg: '$price' },
+          maxOrderValue: { $max: '$price' }
+        }
+      }
+    ])
 
-    res.status(200).json(data);
+    res.status(200).json(data)
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "internal server error" });
+    console.log(error)
+    res.status(500).json({ message: 'internal server error' })
   }
-};
+}
 
 export const getPopularSizeColor = async (req, res) => {
   try {
     const pipeline = [
-      { $unwind: "$products" },
+      { $unwind: '$products' },
       {
         $group: {
-          _id: { size: "$products.size", color: "$products.color" },
-          count: { $sum: "$products.quantity" },
-        },
+          _id: { size: '$products.size', color: '$products.color' },
+          count: { $sum: '$products.quantity' }
+        }
       },
       { $sort: { count: -1 } },
       {
         $project: {
           _id: 0,
-          size: "$_id.size",
-          color: "$_id.color",
-          count: 1,
-        },
+          size: '$_id.size',
+          color: '$_id.color',
+          count: 1
+        }
       },
       {
         $facet: {
-          sizes: [{ $group: { _id: "$size", count: { $sum: "$count" } } }, { $sort: { count: -1 } }, { $limit: 5 }],
-          colors: [{ $group: { _id: "$color", count: { $sum: "$count" } } }, { $sort: { count: -1 } }, { $limit: 5 }],
-        },
-      },
-    ];
+          sizes: [{ $group: { _id: '$size', count: { $sum: '$count' } } }, { $sort: { count: -1 } }, { $limit: 5 }],
+          colors: [{ $group: { _id: '$color', count: { $sum: '$count' } } }, { $sort: { count: -1 } }, { $limit: 5 }]
+        }
+      }
+    ]
 
-    const results = await ConfirmOrder.aggregate(pipeline);
+    const results = await ConfirmOrder.aggregate(pipeline)
 
-    res.status(200).json(results);
+    res.status(200).json(results)
   } catch (error) {
-    console.error(error);
+    console.error(error)
   }
-};
+}
 
 export const getOrdersForStats = async (req, res) => {
   try {
@@ -83,47 +91,47 @@ export const getOrdersForStats = async (req, res) => {
             $sum: {
               $cond: [
                 //cond takes 3 arguments condition , if, else or i can say like Ternary operator
-                { $eq: ["$orderStatus", "pending"] },
+                { $eq: ['$orderStatus', 'pending'] },
                 1,
-                0,
-              ],
-            },
+                0
+              ]
+            }
           },
           processing: {
             $sum: {
               $cond: [
                 //cond takes 3 arguments condition , if, else or i can say like Ternary operator
-                { $eq: ["$orderStatus", "processing"] },
+                { $eq: ['$orderStatus', 'processing'] },
                 1,
-                0,
-              ],
-            },
+                0
+              ]
+            }
           },
           delivered: {
             $sum: {
               $cond: [
                 //cond takes 3 arguments condition , if, else or i can say like Ternary operator
-                { $eq: ["$orderStatus", "delivered"] },
+                { $eq: ['$orderStatus', 'delivered'] },
                 1,
-                0,
-              ],
-            },
-          },
-        },
-      },
-    ]);
-    res.status(200).json(results);
+                0
+              ]
+            }
+          }
+        }
+      }
+    ])
+    res.status(200).json(results)
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "internal server error" });
+    console.log(error)
+    res.status(500).json({ message: 'internal server error' })
   }
-};
+}
 
 export const getOrderPriceForStats = async (req, res) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); //resetting todays time to 0  it takes sethours(hour, minutes, seconds ,milliseconds)
-  const month = new Date();
-  month.setDate(0); //resetting month time to 0  it takes sethours(date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0) //resetting todays time to 0  it takes sethours(hour, minutes, seconds ,milliseconds)
+  const month = new Date()
+  month.setDate(0) //resetting month time to 0  it takes sethours(date)
   try {
     const results = await ConfirmOrder.aggregate([
       {
@@ -131,43 +139,43 @@ export const getOrderPriceForStats = async (req, res) => {
           _id: null,
           today: {
             $sum: {
-              $cond: [{ $gte: ["$createdAt", today] }, "$price", 0],
-            },
+              $cond: [{ $gte: ['$createdAt', today] }, '$price', 0]
+            }
           },
           month: {
             $sum: {
-              $cond: [{ $gte: ["$createdAt", month] }, "$price", 0],
-            },
+              $cond: [{ $gte: ['$createdAt', month] }, '$price', 0]
+            }
           },
-          allTime: { $sum: "$price" },
-        },
-      },
-    ]);
-    res.status(200).json(results);
+          allTime: { $sum: '$price' }
+        }
+      }
+    ])
+    res.status(200).json(results)
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "internal server error" });
+    console.log(error)
+    res.status(500).json({ message: 'internal server error' })
   }
-};
+}
 
 export const getTopCategories = async (req, res) => {
   try {
     const results = await Product.aggregate([
       {
         $group: {
-          _id: "$categories",
-          count: { $sum: "$purchasedCount" },
-        },
+          _id: '$categories',
+          count: { $sum: '$purchasedCount' }
+        }
       },
-      { $unwind: "$_id" },
-      { $group: { _id: "$_id", count: { $sum: "$count" } } },
-      { $project: { _id: 0, title: "$_id", purchasedCount: "$count" } },
+      { $unwind: '$_id' },
+      { $group: { _id: '$_id', count: { $sum: '$count' } } },
+      { $project: { _id: 0, title: '$_id', purchasedCount: '$count' } },
       { $sort: { count: -1 } },
-      { $limit: 10 },
-    ]);
-    res.status(200).json(results);
+      { $limit: 10 }
+    ])
+    res.status(200).json(results)
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "internal server error" });
+    console.log(error)
+    res.status(500).json({ message: 'internal server error' })
   }
-};
+}

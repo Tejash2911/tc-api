@@ -1,40 +1,40 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
 const addressSchema = new mongoose.Schema({
   userID: {
     type: mongoose.Types.ObjectId,
-    ref: "User",
+    ref: 'User',
     required: true,
-    unique: true,
+    unique: true
   },
   address: {
     street: {
       type: String,
-      required: [true, "street cannot be empty!"],
+      required: [true, 'street cannot be empty!']
     },
     city: {
       type: String,
-      required: [true, "City cannot be empty!"],
+      required: [true, 'City cannot be empty!']
     },
     state: {
       type: String,
-      required: [true, "State cannot be empty!"],
+      required: [true, 'State cannot be empty!']
     },
     zip: {
       type: String,
-      required: [true, "Zip cannot be empty!"],
+      required: [true, 'Zip cannot be empty!']
     },
     country: {
       type: String,
-      required: [true, "Country cannot be empty!"],
+      required: [true, 'Country cannot be empty!']
     },
     mobile: {
       type: Number,
-      required: [true, "Mobile cannot be empty!"],
-    },
-  },
-});
+      required: [true, 'Mobile cannot be empty!']
+    }
+  }
+})
 
-const Address = mongoose.model("Address", addressSchema);
+const Address = mongoose.model('Address', addressSchema)
 
-export default Address;
+export default Address
