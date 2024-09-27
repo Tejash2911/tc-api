@@ -1,8 +1,8 @@
 import mongoose from 'mongoose'
 import { createOrderTemplate } from '../helpers/orderConfirmation.js'
 import sendEmail from '../helpers/sendEmail.js'
-import ConfirmOrder from '../models/ConfirmOrder.model.js'
 import Order from '../models/order.model.js'
+import ConfirmOrder from '../models/confirmOrder.model.js'
 
 export const createOrder = async (req, res) => {
   const newOrder = new Order(req.body)

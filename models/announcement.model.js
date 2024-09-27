@@ -8,6 +8,6 @@ const announcementSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-const Announcement = mongoose.model('Announcement', announcementSchema)
+const Announcement = mongoose.models.Announcement || mongoose.model('Announcement', announcementSchema)
 
 export default Announcement

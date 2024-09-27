@@ -37,6 +37,6 @@ const confirmOrderSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-const ConfirmOrder = mongoose.model('ConfirmOrder', confirmOrderSchema)
+const ConfirmOrder = mongoose.models.ConfirmOrder || mongoose.model('ConfirmOrder', confirmOrderSchema)
 
 export default ConfirmOrder
