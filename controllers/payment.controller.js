@@ -3,12 +3,12 @@ import Product from '../models/product.model.js'
 import Order from '../models/order.model.js'
 import Cart from '../models/cart.model.js'
 import User from '../models/user.model.js'
-import ConfirmOrder from '../models/ConfirmOrder.model.js'
 import Razorpay from 'razorpay'
 import crypto from 'crypto'
 import sendEmail from '../helpers/sendEmail.js'
 import { createOrderTemplate } from '../helpers/orderConfirmation.js'
 import { config } from '../config/config.js'
+import ConfirmOrder from '../models/confirmOrder.model.js'
 
 const instance = new Razorpay({
   key_id: config.razorPayKeyId,

@@ -1,4 +1,4 @@
-import ConfirmOrder from '../models/ConfirmOrder.model.js'
+import ConfirmOrder from '../models/confirmOrder.model.js'
 import Product from '../models/product.model.js'
 
 export const getTopProducts = async (req, res) => {
