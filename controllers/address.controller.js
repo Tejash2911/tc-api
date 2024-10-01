@@ -1,16 +1,22 @@
+import mongoose from 'mongoose'
 import Address from '../models/address.model.js'
 
 export const getUserAddress = async (req, res) => {
   try {
-    const address = await Address.findOne({ userID: req.user.id })
-    console.log(address)
-    if (address?.address) {
-      return res.status(200).json({ ok: true, address: address.address })
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'User not authenticated' })
     }
-    return res.status(200).json({ ok: false, message: 'no address found' })
+
+    const address = await Address.findOne({ userID: req.user.id })
+
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' })
+    }
+
+    res.status(200).json(address)
   } catch (error) {
-    console.log(error)
-    res.status(500).json({ ok: false, message: 'internal server error' })
+    console.error('Error fetching user address:', error)
+    res.status(500).json({ message: 'Internal Server Error' })
   }
 }
 

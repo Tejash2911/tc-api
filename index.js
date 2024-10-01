@@ -51,7 +51,7 @@ apiRouter.use('/checkout', stripeRoute)
 apiRouter.use('/announcement', announcementRoute)
 apiRouter.use('/buy', paymentRoute)
 apiRouter.use('/review', reviewRoute)
-apiRouter.use('/user/address', addressRoute)
+apiRouter.use('/address', addressRoute)
 apiRouter.use('/analytics', analyticsRoute)
 
 // Apply API router to /api/v1 endpoint

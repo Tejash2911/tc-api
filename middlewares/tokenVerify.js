@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
 
 export const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.token
+  const authHeader = req.headers.authorization
   if (authHeader) {
     const token = authHeader.split(' ')[1]
     jwt.verify(token, config.jwtSecretKey, (err, user) => {
@@ -23,7 +23,7 @@ export const verifyUserWithToken = (req, res, next) => {
     if (req.user.id === req.params.id || req.user.isAdmin === true) {
       next()
     } else {
-      res.status(403).json({ message: 'you are not allowed to do that ' })
+      res.status(403).json({ message: 'you are not allowed to do that' })
     }
   })
 }
