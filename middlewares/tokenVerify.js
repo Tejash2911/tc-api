@@ -2,9 +2,8 @@ import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
 
 export const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization
-  if (authHeader) {
-    const token = authHeader.split(' ')[1]
+  const token = req.headers.token
+  if (token) {
     jwt.verify(token, config.jwtSecretKey, (err, user) => {
       if (err) {
         res.status(403).json({ message: 'token is not valid' })

@@ -124,7 +124,6 @@ export const paymentVerify = async (req, res) => {
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body
   const body = razorpay_order_id + '|' + razorpay_payment_id
 
-  const crypto = require('crypto')
   const expectedSignature = crypto.createHmac('sha256', config.razorPayKeySecret).update(body.toString()).digest('hex')
   if (expectedSignature === razorpay_signature) {
     try {
@@ -151,7 +150,7 @@ export const paymentVerify = async (req, res) => {
         ) // map used to get only id's of product which are available on order
         await Cart.deleteOne({ userID: dbOrder.userID })
       } else {
-        const idObject = mongoose.Types.ObjectId(dbOrder.products[0].productID) //converting in ObjectID
+        const idObject = new mongoose.Types.ObjectId(dbOrder.products[0].productID) //converting in ObjectID
         await User.updateOne({ _id: dbOrder.userID }, { $addToSet: { purchasedProducts: idObject } })
 
         await Product.findByIdAndUpdate(dbOrder.products[0].productID, {
@@ -162,7 +161,7 @@ export const paymentVerify = async (req, res) => {
       console.log(error)
       return res.status(400).json({ success: false, message: 'failed to process your information' })
     }
-    return res.redirect(`${config.frontendUrl}/paymentsuccess?refrence=${razorpay_payment_id}`)
+    return res.redirect(`${config.frontendUrl}/paymentSuccess?reference=${razorpay_payment_id}`)
   } else {
     return res.status(400).json({ success: false, signatureIsValid: false })
   }

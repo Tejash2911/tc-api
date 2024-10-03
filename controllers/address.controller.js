@@ -44,3 +44,28 @@ export const saveUserAddress = async (req, res) => {
     return res.status(500).json({ ok: false, message: 'internal server error' })
   }
 }
+
+export const updateUserAddress = async (req, res) => {
+  const { street, city, state, zip, country, mobile } = req.body
+
+  if (!street && !city && !state && !zip && !country && !mobile) {
+    return res.status(400).json({ ok: false, message: 'At least one field is required to update the address' })
+  }
+
+  try {
+    const address = await Address.findOneAndUpdate(
+      { userID: req.user.id },
+      { $set: req.body }, // Only update the fields provided in req.body
+      { new: true, runValidators: true } // Return the updated document
+    )
+
+    if (!address) {
+      return res.status(404).json({ ok: false, message: 'Address not found' })
+    }
+
+    return res.status(200).json({ ok: true, address })
+  } catch (error) {
+    console.error('Error updating user address:', error)
+    return res.status(500).json({ ok: false, message: 'Internal Server Error' })
+  }
+}
