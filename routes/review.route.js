@@ -5,7 +5,7 @@ import { abuseReview, addReview, getReviews, upvoteReview } from '../controllers
 const router = express.Router()
 
 //ADD REVIEW
-router.post('/:productid', verifyToken, addReview)
+router.post('/:productId', verifyToken, addReview)
 
 //GET REVIEWS
 router.get('/:id', getReviews)

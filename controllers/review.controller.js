@@ -14,7 +14,7 @@ export const addReview = async (req, res) => {
 
   try {
     // 2) Check if the user make a review before on that product
-    let checkUser = await Review.find({ user: req.user.id, product: req.params.productid })
+    let checkUser = await Review.find({ user: req.user.id, product: req.params.productId })
     console.log(checkUser.length)
     if (checkUser.length !== 0) {
       return res.status(400).json({ success: 'Error', message: 'Only One Review is allowed Per user' })
@@ -23,7 +23,7 @@ export const addReview = async (req, res) => {
     //create review
     const newReview = await Review.create({
       user: req.user.id,
-      product: req.params.productid,
+      product: req.params.productId,
       rating,
       review
     })
@@ -72,18 +72,18 @@ export const abuseReview = async (req, res) => {
   try {
     // Find the review with the matching id
     const dbReview = await Review.findOne({
-      _id: mongoose.Types.ObjectId(req.params.id)
+      _id: new mongoose.Types.ObjectId(req.params.id)
     })
     if (!dbReview) {
       return res.status(404).json({ success: false, message: 'review not found' })
     }
     // If the user has already reported the review, return error message
     if (dbReview.abuseReports.some(vote => vote.userID.toString() === req.user.id)) {
-      return res.status(400).json({ success: false, message: 'you can not report more then once' })
+      return res.status(200).json({ success: false, message: 'you can not report more then once' })
     }
     // If the user is trying to reports his own review, return error message
     if (dbReview.user.toString() === req.user.id) {
-      return res.status(400).json({ success: false, message: 'you can not report your own review' })
+      return res.status(200).json({ success: false, message: 'you can not report your own review' })
     }
     // Update the review and add the user's report
     await Review.findByIdAndUpdate(req.params.id, { $push: { abuseReports: { userID: req.user.id } } }, { new: true })
@@ -99,7 +99,7 @@ export const upvoteReview = async (req, res) => {
   try {
     // Find the review with the matching id
     const dbReview = await Review.findOne({
-      _id: mongoose.Types.ObjectId(req.params.id)
+      _id: new mongoose.Types.ObjectId(req.params.id)
     })
     console.log(dbReview)
     if (!dbReview) {
@@ -108,11 +108,11 @@ export const upvoteReview = async (req, res) => {
     // If the user has already up voted the review, return error message
 
     if (dbReview.upVotes.some(vote => vote.userID.toString() === req.user.id)) {
-      return res.status(400).json({ success: false, message: 'you can not upvote more then once' })
+      return res.status(200).json({ success: false, message: 'you can not upvote more then once' })
     }
     // If the user is trying to upvote his own review, return error message
     if (dbReview.user.toString() === req.user.id) {
-      return res.status(400).json({ success: false, message: 'you can not upvote your own review' })
+      return res.status(200).json({ success: false, message: 'you can not upvote your own review' })
     }
     // Update the review and add the user's upvote
     await Review.findByIdAndUpdate(req.params.id, { $push: { upVotes: { userID: req.user.id } } }, { new: true })
