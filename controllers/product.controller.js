@@ -7,23 +7,29 @@ export const addProduct = async (req, res) => {
   try {
     const image = await uploadImageToCloudinary(req.body.img, id)
     req.body.img = image.url
+
     const savedProduct = await Product.create({ ...req.body, _id: id })
-    res.status(200).json(savedProduct)
+
+    return res.status(201).json(savedProduct)
   } catch (err) {
     if (err.name === 'ValidationError') {
-      if (err.name == 'ValidationError') {
-        for (field in err.errors) {
-          return res.status(400).json({ success: false, message: err.errors[field].message })
-        }
-      }
-    }
-    if (err.code === 11000) {
-      const duplicate = Object.keys(err.keyPattern)[0]
+      const firstErrorKey = Object.keys(err.errors)[0]
       return res.status(400).json({
-        message: `A product already exist with the same ${duplicate}`
+        success: false,
+        message: err.errors[firstErrorKey].message
       })
     }
-    return res.status(500).json({ message: 'internal server Error' })
+
+    if (err.code === 11000) {
+      const duplicateField = Object.keys(err.keyPattern)[0]
+      return res.status(400).json({
+        success: false,
+        message: `A product already exists with the same ${duplicateField}`
+      })
+    }
+
+    const errorMessages = Object.values(err.errors).map(error => error.message)
+    return res.status(400).json({ success: false, message: errorMessages })
   }
 }
 
@@ -80,7 +86,7 @@ export const getProductInfo = async (req, res) => {
 export const getAllProducts = async (req, res) => {
   // Parse and default offset and limit
   const offset = parseInt(req.query.offset, 10) || 1
-  const limit = parseInt(req.query.limit, 10) || 5
+  const limit = parseInt(req.query.limit, 10) || 10
   const skip = (offset - 1) * limit
 
   // Extract query parameters

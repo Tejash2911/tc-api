@@ -23,7 +23,7 @@ export const addAnnouncement = async (req, res) => {
       return res.status(400).json({ error: 'text length can not be more then 140 characters' })
     }
     title.save()
-    res.status(200).json('announcement successfully added!')
+    res.status(200).json({ message: 'announcement successfully added!' })
   } catch (error) {
     console.log(error)
     res.status(500).json({ error: 'internal server error' })
@@ -102,7 +102,7 @@ export const deleteAnnouncement = async (req, res) => {
   }
   try {
     const response = await Announcement.findByIdAndDelete(id)
-    res.status(200).json({ message: 'announcement updated successfully' })
+    res.status(200).json({ message: 'announcement successfully deleted!' })
   } catch (error) {
     console.log(error)
     res.status(500).json({ message: 'internal server error' })

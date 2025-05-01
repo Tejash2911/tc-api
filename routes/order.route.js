@@ -27,12 +27,12 @@ router.delete('/:id', verifyAdminWithToken, deleteOrder)
 router.get('/find/:id', verifyUserWithToken, getUserOrders)
 
 //GET ALL ORDERS
-router.get('/', verifyAdminWithToken, getAllOrders)
+router.get('/all', verifyAdminWithToken, getAllOrders)
 
 //CHANGE ORDER STATUS
 router.put('/status/:id', verifyAdminWithToken, changeOrderStatus)
 
 //GET ORDER INFO
-router.get('/:id', getOrderInfo)
+router.get('/info/:id', getOrderInfo)
 
 export default router

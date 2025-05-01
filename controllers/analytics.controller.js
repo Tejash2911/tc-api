@@ -75,7 +75,7 @@ export const getPopularSizeColor = async (req, res) => {
 
     const results = await ConfirmOrder.aggregate(pipeline)
 
-    res.status(200).json(results)
+    res.status(200).json(results[0])
   } catch (error) {
     console.error(error)
   }
@@ -120,7 +120,7 @@ export const getOrdersForStats = async (req, res) => {
         }
       }
     ])
-    res.status(200).json(results)
+    res.status(200).json(results[0])
   } catch (error) {
     console.log(error)
     res.status(500).json({ message: 'internal server error' })
@@ -151,7 +151,7 @@ export const getOrderPriceForStats = async (req, res) => {
         }
       }
     ])
-    res.status(200).json(results)
+    res.status(200).json(results[0])
   } catch (error) {
     console.log(error)
     res.status(500).json({ message: 'internal server error' })

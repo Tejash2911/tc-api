@@ -5,7 +5,7 @@ import { decryptPass, encryptPass } from '../utils/pass.js'
 export const deleteUser = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id)
-    res.status(200).json('user deleted')
+    res.status(200).json({ message: `user successfully deleted!` })
   } catch (err) {
     res.status(500).json(err)
   }
@@ -102,7 +102,7 @@ export const updateUser = async (req, res) => {
     }
     const user = await User.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
     console.log('me hit3')
-    res.status(200).json(user)
+    res.status(200).json({ message: `user successfully updated!` })
   } catch (err) {
     res.status(500).json({ error: 'failed to update user' })
     console.log(err)

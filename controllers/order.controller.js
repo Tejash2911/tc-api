@@ -49,8 +49,8 @@ export const getUserOrders = async (req, res) => {
 }
 
 export const getAllOrders = async (req, res) => {
-  const { page = 1, limit = 10 } = req.query
-  const startIndex = (page - 1) * limit
+  const { offset = 1, limit = 10 } = req.query
+  const startIndex = (offset - 1) * limit
   const FieldsIWant = { createdAt: 1, userInfo: 1, price: 1, orderStatus: 1 }
   let query = ConfirmOrder.find({}, FieldsIWant)
   const filters = []
@@ -71,8 +71,13 @@ export const getAllOrders = async (req, res) => {
 
   try {
     const orders = await query.skip(startIndex).limit(limit).exec()
-    if (orders.length < 1) return res.status(404).json({ message: 'No Products Found' })
-    res.status(200).json(orders)
+
+    const totalCount = await ConfirmOrder.countDocuments(filters.length ? { $and: filters } : {})
+
+    res.status(200).json({
+      data: orders,
+      totalCount
+    })
   } catch (err) {
     console.log(err)
     res.status(500).json({ message: 'internal server error' })
