@@ -110,13 +110,8 @@ export const changeOrderStatus = async (req, res) => {
 }
 
 export const getOrderInfo = async (req, res) => {
-  const id = req.params.id
-  if (!id) return res.status(401).json({ message: 'ID required' })
-
-  if (!mongoose.isValidObjectId(id)) return res.status(401).json({ message: 'ID is not valid' })
-
   try {
-    const order = await ConfirmOrder.findById(id)
+    const order = await ConfirmOrder.findById(req.params.id)
     res.status(200).json(order)
   } catch (error) {
     console.log(error)
