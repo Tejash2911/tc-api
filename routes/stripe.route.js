@@ -14,9 +14,9 @@ router.post('/payment', async (req, res) => {
     },
     (stripErr, stripRes) => {
       if (stripErr) {
-        res.status(500).json(stripErr)
+        return res.status(500).json(stripErr)
       } else {
-        res.status(200).json(stripRes)
+        return res.status(200).json(stripRes)
       }
     }
   )

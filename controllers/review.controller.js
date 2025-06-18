@@ -1,23 +1,23 @@
 import mongoose from 'mongoose'
 import Review from '../models/review.model.js'
+import { messages } from '../utils/constants.js'
 
 export const addReview = async (req, res) => {
   const { review, rating } = req.body
   // 1) Check if user entered all fields
   if (!review && !rating) {
-    return res.status(400).json({ success: false, message: 'All fields ae Required' })
+    return res.status(400).json({ message: messages.VALIDATION_ERROR })
   }
 
   if (rating < 1) {
-    return res.status(400).json({ success: false, message: 'Rating cant be less then One' })
+    return res.status(400).json({ message: messages.VALIDATION_ERROR })
   }
 
   try {
     // 2) Check if the user make a review before on that product
     let checkUser = await Review.find({ user: req.user.id, product: req.params.productId })
-    console.log(checkUser.length)
     if (checkUser.length !== 0) {
-      return res.status(400).json({ success: 'Error', message: 'Only One Review is allowed Per user' })
+      return res.status(400).json({ message: messages.ONLY_ONE_ALLOWED })
     }
 
     //create review
@@ -27,10 +27,10 @@ export const addReview = async (req, res) => {
       rating,
       review
     })
-    res.status(201).json({ success: true, message: 'your Review is Successfully added' })
+    return res.status(201).json({ message: messages.REVIEW_CREATED })
   } catch (error) {
     console.log(error)
-    res.status(500).json({ success: false, message: 'internal server error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -38,7 +38,7 @@ export const getReviews = async (req, res) => {
   try {
     const productId = req.params.id
     if (!productId || !mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(404).json({ message: 'Invalid Product ID' })
+      return res.status(404).json({ message: messages.NOT_FOUND })
     }
 
     const review = await Review.aggregate([
@@ -61,10 +61,10 @@ export const getReviews = async (req, res) => {
       { $unwind: '$user' }
     ])
 
-    res.status(200).json(review)
+    return res.status(200).json(review)
   } catch (error) {
-    console.error(error.message) // add some logging for debugging
-    res.status(500).json({ message: 'Internal Server Error' })
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -75,23 +75,22 @@ export const abuseReview = async (req, res) => {
       _id: new mongoose.Types.ObjectId(req.params.id)
     })
     if (!dbReview) {
-      return res.status(404).json({ success: false, message: 'review not found' })
+      return res.status(404).json({ message: messages.NOT_FOUND })
     }
     // If the user has already reported the review, return error message
     if (dbReview.abuseReports.some(vote => vote.userID.toString() === req.user.id)) {
-      return res.status(200).json({ success: false, message: 'you can not report more then once' })
+      return res.status(200).json({ message: messages.ONLY_ONE_REPORT })
     }
     // If the user is trying to reports his own review, return error message
     if (dbReview.user.toString() === req.user.id) {
-      return res.status(200).json({ success: false, message: 'you can not report your own review' })
+      return res.status(200).json({ message: messages.CAN_NOT_REPORT_OWN_REVIEW })
     }
     // Update the review and add the user's report
     await Review.findByIdAndUpdate(req.params.id, { $push: { abuseReports: { userID: req.user.id } } }, { new: true })
-    return res
-      .status(200)
-      .json({ success: true, message: 'Thank you for your contribution, your response has been recorded' })
-  } catch (err) {
-    return res.status(500).json({ success: false, message: 'something went wrong' })
+    return res.status(200).json({ message: messages.REVIEW_REPORTED })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -101,26 +100,23 @@ export const upvoteReview = async (req, res) => {
     const dbReview = await Review.findOne({
       _id: new mongoose.Types.ObjectId(req.params.id)
     })
-    console.log(dbReview)
     if (!dbReview) {
-      return res.status(404).json({ success: false, message: 'review not found' })
+      return res.status(404).json({ message: messages.NOT_FOUND })
     }
     // If the user has already up voted the review, return error message
 
     if (dbReview.upVotes.some(vote => vote.userID.toString() === req.user.id)) {
-      return res.status(200).json({ success: false, message: 'you can not upvote more then once' })
+      return res.status(200).json({ message: messages.ONLY_ONE_UPVOTE })
     }
     // If the user is trying to upvote his own review, return error message
     if (dbReview.user.toString() === req.user.id) {
-      return res.status(200).json({ success: false, message: 'you can not upvote your own review' })
+      return res.status(200).json({ message: messages.CAN_NOT_UPVOTE_OWN_REVIEW })
     }
     // Update the review and add the user's upvote
     await Review.findByIdAndUpdate(req.params.id, { $push: { upVotes: { userID: req.user.id } } }, { new: true })
-    return res
-      .status(200)
-      .json({ success: true, message: 'Thank you for your contribution, your response has been recorded' })
-  } catch (err) {
-    console.log(err)
-    return res.status(500).json({ success: false, message: 'something went wrong' })
+    return res.status(200).json({ message: messages.REVIEW_UPVOTED })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }

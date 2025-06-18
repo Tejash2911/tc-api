@@ -36,7 +36,6 @@ reviewSchema.post('save', function () {
 
 //calculating avg
 reviewSchema.static.calcAvgRating = async function (productID) {
-  console.log('calc run')
   const stats = await Review.aggregate([
     { $match: { product: productID } },
     {

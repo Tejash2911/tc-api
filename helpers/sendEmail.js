@@ -19,9 +19,9 @@ const sendEmail = options => {
     text: options?.emailText || options.emailHtml
   }
 
-  transporter.sendMail(mailOptions, (err, info) => {
-    if (err) {
-      console.log(err)
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error)
     } else {
       console.log(info)
     }

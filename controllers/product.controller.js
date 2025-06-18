@@ -1,6 +1,7 @@
 import mongoose from 'mongoose'
 import Product from '../models/product.model.js'
 import { deleteImageFromCloudinary, uploadImageToCloudinary } from '../utils/cloudinaryMethods.js'
+import { messages } from '../utils/constants.js'
 
 export const addProduct = async (req, res) => {
   const id = new mongoose.Types.ObjectId()
@@ -10,26 +11,10 @@ export const addProduct = async (req, res) => {
 
     const savedProduct = await Product.create({ ...req.body, _id: id })
 
-    return res.status(201).json(savedProduct)
-  } catch (err) {
-    if (err.name === 'ValidationError') {
-      const firstErrorKey = Object.keys(err.errors)[0]
-      return res.status(400).json({
-        success: false,
-        message: err.errors[firstErrorKey].message
-      })
-    }
-
-    if (err.code === 11000) {
-      const duplicateField = Object.keys(err.keyPattern)[0]
-      return res.status(400).json({
-        success: false,
-        message: `A product already exists with the same ${duplicateField}`
-      })
-    }
-
-    const errorMessages = Object.values(err.errors).map(error => error.message)
-    return res.status(400).json({ success: false, message: errorMessages })
+    return res.status(201).json({ message: messages.PRODUCT_CREATED, data: savedProduct })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -47,39 +32,42 @@ export const updateProduct = async (req, res) => {
       },
       { new: true }
     )
-    res.status(200).json(updateProduct)
+    return res.status(200).json({ message: messages.PRODUCT_UPDATED, data: updateProduct })
   } catch (error) {
     console.log(error)
-    res.status(400).json(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const deleteProduct = async (req, res) => {
   const id = req.params.id
-  if (!mongoose.isValidObjectId(id))
-    return res.status(403).json({ message: 'The product you provided is not a valid id' })
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(404).json({ message: messages.NOT_FOUND })
+  }
   try {
     await Product.findByIdAndDelete(id)
     const result = await deleteImageFromCloudinary(id)
-    res.status(200).json({ message: 'product deleted Successfully' })
-  } catch (err) {
-    res.status(500).json({ message: 'failed to delete product' })
+    return res.status(200).json({ message: messages.PRODUCT_DELETED })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const getProductInfo = async (req, res) => {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(404).json('Invalid Product ID')
+    return res.status(404).json({ message: messages.NOT_FOUND })
   }
 
   try {
     const savedProducts = await Product.findById(req.params.id)
     if (!savedProducts) {
-      return res.status(404).json({ message: 'Product not Found' })
+      return res.status(404).json({ message: messages.NOT_FOUND })
     }
-    res.status(200).json(savedProducts)
-  } catch (err) {
-    res.status(500).json({ message: 'internal server Error' })
+    return res.status(200).json(savedProducts)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -159,17 +147,17 @@ export const getAllProducts = async (req, res) => {
     // Count documents with filters
     const totalCount = await Product.countDocuments(filterArr.length > 0 ? { $and: filterArr } : {})
 
-    res.status(200).json({ data: products, totalCount })
+    return res.status(200).json({ data: products, totalCount })
   } catch (error) {
-    console.error('Error fetching products:', error)
-    res.status(500).json({ message: 'Failed to get products' })
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const searchProducts = async (req, res) => {
   const s = req.params.s
   if (!s) {
-    return res.status(400).json('not found')
+    return res.status(404).json({ message: messages.NOT_FOUND })
   }
   try {
     const products = await Product.find(
@@ -190,6 +178,6 @@ export const searchProducts = async (req, res) => {
     return res.status(200).json(products)
   } catch (error) {
     console.log(error)
-    return res.status(500).json('internal server error')
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }

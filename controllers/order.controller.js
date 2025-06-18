@@ -3,15 +3,17 @@ import { createOrderTemplate } from '../helpers/orderConfirmation.js'
 import sendEmail from '../helpers/sendEmail.js'
 import Order from '../models/order.model.js'
 import ConfirmOrder from '../models/confirmOrder.model.js'
+import { messages } from '../utils/constants.js'
 
 export const createOrder = async (req, res) => {
   const newOrder = new Order(req.body)
 
   try {
     const savedOrder = await newOrder.save()
-    res.status(200).json(savedOrder)
-  } catch (err) {
-    res.status(500).json(err)
+    return res.status(200).json({ message: messages.ORDER_CREATED, data: savedOrder })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -24,27 +26,30 @@ export const updateOrder = async (req, res) => {
       },
       { new: true }
     )
-    res.status(200).json(updatedOrder)
-  } catch (err) {
-    res.status(500).json(err)
+    return res.status(200).json({ message: messages.ORDER_UPDATED, data: updatedOrder })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const deleteOrder = async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id)
-    res.status(200).json('Order has been deleted...')
-  } catch (err) {
-    res.status(500).json(err)
+    return res.status(200).json({ message: messages.ORDER_DELETED })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const getUserOrders = async (req, res) => {
   try {
     const orders = await ConfirmOrder.find({ userID: req.user.id }).sort({ createdAt: -1 })
-    res.status(200).json(orders)
-  } catch (err) {
-    res.status(500).json(err)
+    return res.status(200).json(orders)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -74,13 +79,13 @@ export const getAllOrders = async (req, res) => {
 
     const totalCount = await ConfirmOrder.countDocuments(filters.length ? { $and: filters } : {})
 
-    res.status(200).json({
+    return res.status(200).json({
       data: orders,
       totalCount
     })
-  } catch (err) {
-    console.log(err)
-    res.status(500).json({ message: 'internal server error' })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -88,8 +93,12 @@ export const changeOrderStatus = async (req, res) => {
   const { status } = req.body
   const { id } = req.params
 
-  if (!mongoose.isValidObjectId(id)) return res.status(402).json({ message: 'order id is not valid' })
-  if (!status) return res.status(402).json({ message: 'status is requires' })
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(402).json({ message: messages.NOT_FOUND })
+  }
+  if (!status) {
+    return res.status(402).json({ message: messages.VALIDATION_ERROR })
+  }
 
   try {
     const order = await ConfirmOrder.findByIdAndUpdate(id, { orderStatus: status }, { new: true })
@@ -102,19 +111,19 @@ export const changeOrderStatus = async (req, res) => {
       emailText: emailHTML
     })
 
-    res.status(200).json({ message: `order status is successfully updated to ${status}` })
-  } catch (err) {
-    console.log(err)
-    res.status(500).json({ message: 'internal server error' })
+    return res.status(200).json({ message: messages.ORDER_STATUS_UPDATED })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const getOrderInfo = async (req, res) => {
   try {
     const order = await ConfirmOrder.findById(req.params.id)
-    res.status(200).json(order)
+    return res.status(200).json(order)
   } catch (error) {
     console.log(error)
-    res.status(500).json({ message: 'internal server error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }

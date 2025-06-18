@@ -17,6 +17,7 @@ import reviewRoute from './routes/review.route.js'
 import stripeRoute from './routes/stripe.route.js'
 import analyticsRoute from './routes/analytics.route.js'
 import paymentRoute from './routes/payment.route.js'
+import { messages } from './utils/constants.js'
 
 const app = express()
 
@@ -34,8 +35,8 @@ app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ extended: true, limit: '50mb' }))
 
 // Connect to the database
-connectToDB().catch(err => {
-  console.error('Failed to connect to database:', err)
+connectToDB().catch(error => {
+  console.log('Failed to connect to database:', error)
   process.exit(1)
 })
 
@@ -64,13 +65,13 @@ app.get('/', (req, res) => {
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ message: 'Not Found' })
+  return res.status(404).json({ message: messages.NOT_FOUND })
 })
 
 // Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack)
-  res.status(500).json({ message: 'Internal Server Error' })
+app.use((error, req, res, next) => {
+  console.log(error)
+  return res.status(500).json({ message: messages.INTERNAL_ERROR })
 })
 
 // Start the server
@@ -89,7 +90,7 @@ function gracefulShutdown() {
   })
 
   setTimeout(() => {
-    console.error('Could not close connections in time, forcefully shutting down')
+    console.log('Could not close connections in time, forcefully shutting down')
     process.exit(1)
   }, 10000)
 }
@@ -98,13 +99,13 @@ process.on('SIGTERM', gracefulShutdown)
 process.on('SIGINT', gracefulShutdown)
 
 // Handle uncaught exceptions
-process.on('uncaughtException', err => {
-  console.error('Uncaught Exception:', err)
+process.on('uncaughtException', error => {
+  console.log('Uncaught Exception:', error)
   gracefulShutdown()
 })
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason)
+  console.log('Unhandled Rejection at:', promise, 'reason:', reason)
   gracefulShutdown()
 })

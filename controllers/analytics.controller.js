@@ -1,5 +1,6 @@
 import ConfirmOrder from '../models/confirmOrder.model.js'
 import Product from '../models/product.model.js'
+import { messages } from '../utils/constants.js'
 
 export const getTopProducts = async (req, res) => {
   const condition = req.query.for
@@ -18,10 +19,10 @@ export const getTopProducts = async (req, res) => {
       { $project: project },
       { $addFields: addField }
     ])
-    res.status(200).json(products)
+    return res.status(200).json(products)
   } catch (error) {
     console.log(error)
-    res.status(500).json({ message: 'internal server error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -39,10 +40,10 @@ export const getSales = async (req, res) => {
       }
     ])
 
-    res.status(200).json(data)
+    return res.status(200).json(data)
   } catch (error) {
     console.log(error)
-    res.status(500).json({ message: 'internal server error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -75,9 +76,10 @@ export const getPopularSizeColor = async (req, res) => {
 
     const results = await ConfirmOrder.aggregate(pipeline)
 
-    res.status(200).json(results[0])
+    return res.status(200).json(results[0])
   } catch (error) {
-    console.error(error)
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -120,10 +122,10 @@ export const getOrdersForStats = async (req, res) => {
         }
       }
     ])
-    res.status(200).json(results[0])
+    return res.status(200).json(results[0])
   } catch (error) {
     console.log(error)
-    res.status(500).json({ message: 'internal server error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -151,10 +153,10 @@ export const getOrderPriceForStats = async (req, res) => {
         }
       }
     ])
-    res.status(200).json(results[0])
+    return res.status(200).json(results[0])
   } catch (error) {
     console.log(error)
-    res.status(500).json({ message: 'internal server error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -173,9 +175,9 @@ export const getTopCategories = async (req, res) => {
       { $sort: { count: -1 } },
       { $limit: 10 }
     ])
-    res.status(200).json(results)
+    return res.status(200).json(results)
   } catch (error) {
     console.log(error)
-    res.status(500).json({ message: 'internal server error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }

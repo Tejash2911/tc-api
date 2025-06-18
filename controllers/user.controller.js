@@ -1,22 +1,25 @@
 import mongoose from 'mongoose'
 import User from '../models/user.model.js'
 import { decryptPass, encryptPass } from '../utils/pass.js'
+import { messages } from '../utils/constants.js'
 
 export const deleteUser = async (req, res) => {
   try {
     await User.findByIdAndDelete(req.params.id)
-    res.status(200).json({ message: `user successfully deleted!` })
-  } catch (err) {
-    res.status(500).json(err)
+    return res.status(200).json({ message: messages.USER_DELETED })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const getUserInfo = async (req, res) => {
   try {
     const sUser = await User.findById(req.params.id)
-    res.status(200).json(sUser)
-  } catch (err) {
-    res.status(500).json(err)
+    return res.status(200).json(sUser)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -57,9 +60,9 @@ export const getAllUsersInfo = async (req, res) => {
     const totalCount = await User.countDocuments(filterQuery)
 
     return res.status(200).json({ data: resUsers, totalCount })
-  } catch (err) {
-    console.log(err)
-    res.status(500).json({ err: 'Internal server error' })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -82,29 +85,31 @@ export const getUserStats = async (req, res) => {
         }
       }
     ])
-    res.status(200).json(data)
-  } catch (err) {
-    res.status(500).json(err)
+    return res.status(200).json(data)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const updateUser = async (req, res) => {
   try {
-    console.log('me hit')
     if (req.body.password) {
-      if (!req.body.currentPass) return res.status(400).json({ error: 'Old password Is Required!!' })
+      if (!req.body.currentPass) {
+        return res.status(400).json({ message: messages.VALIDATION_ERROR })
+      }
       const oldDbPass = await User.findById(req.user.id, { password: 1, _id: 0 })
       const decryptedOldPass = decryptPass(oldDbPass.password)
 
-      if (decryptedOldPass !== req.body.currentPass)
-        return res.status(401).json({ error: "Old password does'nt matched!!" })
+      if (decryptedOldPass !== req.body.currentPass) {
+        return res.status(400).json({ message: messages.VALIDATION_ERROR })
+      }
       req.body.password = encryptPass(req.body.password)
     }
     const user = await User.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true })
-    console.log('me hit3')
-    res.status(200).json({ message: `user successfully updated!` })
-  } catch (err) {
-    res.status(500).json({ error: 'failed to update user' })
-    console.log(err)
+    return res.status(200).json({ message: messages.USER_UPDATED })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }

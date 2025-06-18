@@ -5,10 +5,11 @@ import CryptoJS from 'crypto-js'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { config } from '../config/config.js'
+import { messages } from '../utils/constants.js'
 
 export const register = async (req, res) => {
   if (req.body.password.length < 5 || req.body.password.length > 16) {
-    return res.status(400).json({ success: false, message: 'password length should be in range of 5 to 16 character' })
+    return res.status(400).json({ message: messages.VALIDATION_ERROR })
   }
   const newUser = new User({
     firstName: req.body.firstName,
@@ -31,40 +32,29 @@ export const register = async (req, res) => {
       { expiresIn: config.jwtSecretExpire || '3d' }
     )
 
-    res.status(201).json({ ...others, accessToken })
-  } catch (err) {
-    console.log(err)
-    if (err.code === 11000) {
-      return res.status(400).json({ success: false, message: 'account with this email already exist' })
-    } else if (err.name === 'ValidationError') {
-      if (err.name == 'ValidationError') {
-        for (field in err.errors) {
-          return res.status(400).json({ success: false, message: err.errors[field].message })
-        }
-      }
-    } else {
-      console.log(`Logged Error from register user : ${err}`)
-      return res.status(500).json({ success: false, message: 'internal server error' })
-    }
+    return res.status(201).json({ ...others, accessToken })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const login = async (req, res) => {
   console.log(req.body)
   if (!req.body.email || !req.body.password) {
-    return res.status(400).json({ success: false, message: 'please provide email and password' })
+    return res.status(400).json({ message: messages.BAD_REQUEST })
   }
 
   try {
     const user = await User.findOne({ email: req.body.email })
     if (!user) {
-      return res.status(401).json({ success: false, message: "user with this emil does'nt exist" })
+      return res.status(404).json({ message: messages.NOT_FOUND })
     }
 
     //checking if this login req is for admin
     if (req.body.forAdmin) {
       if (!user.isAdmin) {
-        return res.status(401).json({ success: false, message: 'wrong credentials' })
+        return res.status(404).json({ message: messages.NOT_FOUND })
       }
     }
 
@@ -74,7 +64,7 @@ export const login = async (req, res) => {
     console.log(`db pass = ${pass}`)
     console.log(`user pass = ${req.body.password}`)
     if (pass !== req.body.password) {
-      return res.status(401).json({ success: false, message: 'wrong credentials' })
+      return res.status(404).json({ message: messages.NOT_FOUND })
     }
 
     const accessToken = jwt.sign(
@@ -87,20 +77,21 @@ export const login = async (req, res) => {
     )
 
     const { password, resetPasswordToken, resetPasswordExpire, ...others } = user._doc
-    res.status(200).json({ ...others, accessToken })
-  } catch (err) {
-    console.log(`Logged Error from login user : ${err}`)
-    return res.status(500).json({
-      // Worked
-      success: false,
-      message: 'Internal server error'
+    return res.status(200).json({
+      message: messages.LOGIN_SUCCESS,
+      data: { ...others, accessToken }
     })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const forgotPassword = async (req, res) => {
   const email = req.body.email
-  if (!email) return res.status(400).json({ success: false, message: 'please provide a email' })
+  if (!email) {
+    return res.status(400).json({ message: messages.BAD_REQUEST })
+  }
 
   const resetToken = crypto.randomBytes(20).toString('hex')
   const hashedResetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex')
@@ -116,7 +107,9 @@ export const forgotPassword = async (req, res) => {
       }
     )
 
-    if (!user) return res.status(401).json({ success: false, message: 'user with this email not exist' })
+    if (!user) {
+      return res.status(401).json({ message: messages.UNAUTHORIZED })
+    }
 
     //sending email thing
     const resetURl = `${config.frontendUrl}/resetpassword/${resetToken}`
@@ -144,12 +137,19 @@ export const forgotPassword = async (req, res) => {
         }
       )
       console.log(error)
-      return res.status(401).json({ success: false, message: 'Failed to send email' })
+      return res.status(401).json({ message: messages.UNAUTHORIZED })
     }
-    res.status(200).json({ success: true, message: 'Email send Successfully' })
+    return res.status(200).json({ message: messages.EMAIL_SENT })
   } catch (error) {
-    return res.status(500).json(error)
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
+}
+
+export const logout = async (req, res) => {
+  // For JWT, we don't need to do anything on the server side
+  // The client should clear the token from localStorage/cookies
+  return res.status(200).json({ message: messages.LOGOUT_SUCCESS })
 }
 
 export const resetPassword = async (req, res) => {
@@ -161,7 +161,9 @@ export const resetPassword = async (req, res) => {
       resetPasswordExpire: { $gt: Date.now() }
     })
 
-    if (!user) return res.status(400).json({ error: 'Invalid reset token' })
+    if (!user) {
+      return res.status(404).json({ message: messages.NOT_FOUND })
+    }
 
     //checking if user is entering his old password
     const oldPassHAsh = CryptoJS.AES.decrypt(user.password, config.cryptoJsSecretKey)
@@ -170,7 +172,7 @@ export const resetPassword = async (req, res) => {
     const newPassword = req.body.password
 
     if (oldPassword === newPassword) {
-      return res.status(401).json({ error: 'you can not add your current password' })
+      return res.status(400).json({ message: messages.VALIDATION_ERROR })
     }
 
     //setting saving new password to mongodb
@@ -179,9 +181,9 @@ export const resetPassword = async (req, res) => {
     user.resetPasswordExpire = undefined
     await user.save()
 
-    res.status(200).json({ data: 'password successfully changed' })
+    return res.status(200).json({ message: messages.PASSWORD_CHANGED })
   } catch (error) {
     console.log(error)
-    return res.status(500).json({ error: 'Internal server error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }

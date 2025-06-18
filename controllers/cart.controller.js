@@ -1,4 +1,5 @@
 import Cart from '../models/cart.model.js'
+import { messages } from '../utils/constants.js'
 
 export const addToCart = async (req, res) => {
   try {
@@ -18,14 +19,12 @@ export const addToCart = async (req, res) => {
 
         await cart.save()
 
-        console.log('cart updated')
         return res
           .status(200)
-          .json({ status: 'success', productExisted: true, message: 'Product Quantity updated to Cart' })
+          .json({ status: 'success', productExisted: true, message: messages.PRODUCT_QUANTITY_UPDATED })
 
         // if user cart does'nt have that product
       } else {
-        console.log('product is not duplicate')
         await Cart.findOneAndUpdate(
           { userID: req.user.id },
           {
@@ -37,16 +36,16 @@ export const addToCart = async (req, res) => {
           { new: true }
         )
 
-        return res.status(200).json({ status: 'success', productExisted: false, message: 'Product added to Cart' })
+        return res.status(200).json({ productExisted: false, message: messages.PRODUCT_CREATED })
       }
     } else {
       const newCart = Cart({ ...req.body, userID: req.user.id })
       await newCart.save()
-      return res.status(200).json({ status: 'success', productExisted: false, message: 'Product added to Cart' })
+      return res.status(200).json({ productExisted: false, message: messages.PRODUCT_CREATED })
     }
-  } catch (err) {
-    res.status(500).json({ status: 'failed', message: 'Internal Server Error' })
-    console.log(err)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -62,41 +61,38 @@ export const getCartSize = async (req, res) => {
       { $project: { size: 1, _id: 0 } }
     ])
     const [removedArrayBrackets] = cartSize
-    res.status(200).json(removedArrayBrackets)
+    return res.status(200).json(removedArrayBrackets)
   } catch (error) {
     console.log(error)
-    res.status(500).json({ message: 'internal server error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const updateCartQty = async (req, res) => {
   try {
     if (req.params.newQuantity === '0') {
-      console.log('quantity is 0')
       await Cart.updateOne({ userID: req.user.id }, { $pull: { products: { productID: req.params.productNumber } } })
     } else {
-      console.log('quantity is not 0')
       await Cart.updateOne(
         { userID: req.user.id, 'products.productID': req.params.productNumber },
         { $set: { 'products.$.quantity': req.params.newQuantity } }
       )
     }
 
-    res.status(200).json({ status: 'success', message: 'Product Quantity Updated Successfully' })
+    return res.status(200).json({ message: messages.PRODUCT_QUANTITY_UPDATED })
   } catch (error) {
     console.log(error)
-    res.status(500).json({ status: 'failed', message: 'Internal Server Error' })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
 export const deleteFromCart = async (req, res) => {
-  console.log(req.params.id)
   try {
     await Cart.updateOne({ userID: req.user.id }, { $pull: { products: { productID: req.params.id } } })
-    res.status(200).json({ status: 'success', message: 'Product deleted Successfully' })
-  } catch (err) {
-    console.log(err)
-    res.status(500).json({ status: 'failed', message: 'Internal Server Error' })
+    return res.status(200).json({ message: messages.PRODUCT_DELETED })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -129,7 +125,7 @@ export const getUserCart = async (req, res) => {
       }
     ])
     if (!cart.length) {
-      return res.status(404).json({ success: true, message: 'no products found' })
+      return res.status(404).json({ message: messages.NOT_FOUND })
     }
     const [carT] = cart //removing array brackets
     const mergedProducts = []
@@ -141,10 +137,10 @@ export const getUserCart = async (req, res) => {
       mergedProducts.push({ ...product, ...productInfo })
     })
 
-    res.status(200).json({ userID: req.user.id, cartID: carT._id, products: mergedProducts, productFound: true })
-  } catch (err) {
-    console.log(err)
-    res.status(500).json(err)
+    return res.status(200).json({ userID: req.user.id, cartID: carT._id, products: mergedProducts, productFound: true })
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -152,8 +148,9 @@ export const getAllCart = async (req, res) => {
   try {
     const cart = await Cart.find()
 
-    res.status(200).json(cart)
-  } catch (err) {
-    res.status(500).json(err)
+    return res.status(200).json(cart)
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }

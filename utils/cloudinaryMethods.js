@@ -8,21 +8,15 @@ cloudinary.config({
 })
 
 export const uploadImageToCloudinary = async (image, name) => {
-  console.log('me run')
   try {
     const result = await cloudinary.uploader.upload(image, {
       public_id: name
     })
 
-    return {
-      success: true,
-      url: result.secure_url
-    }
+    return { success: true, url: result.secure_url }
   } catch (error) {
-    return {
-      success: false,
-      message: error.message
-    }
+    console.log(error)
+    return { success: false, message: error.message }
   }
 }
 

@@ -1,19 +1,20 @@
 import jwt from 'jsonwebtoken'
 import { config } from '../config/config.js'
+import { messages } from '../utils/constants.js'
 
 export const verifyToken = (req, res, next) => {
   const token = req.headers.token
   if (token) {
-    jwt.verify(token, config.jwtSecretKey, (err, user) => {
-      if (err) {
-        res.status(403).json({ message: 'token is not valid' })
+    jwt.verify(token, config.jwtSecretKey, (error, user) => {
+      if (error) {
+        return res.status(401).json({ message: messages.UNAUTHORIZED })
       } else {
         req.user = user
         next()
       }
     })
   } else {
-    res.status(401).json({ message: 'You are not Logged in' })
+    return res.status(401).json({ message: messages.UNAUTHORIZED })
   }
 }
 
@@ -22,7 +23,7 @@ export const verifyUserWithToken = (req, res, next) => {
     if (req.user.id === req.params.id || req.user.isAdmin === true) {
       next()
     } else {
-      res.status(403).json({ message: 'you are not allowed to do that' })
+      return res.status(401).json({ message: messages.UNAUTHORIZED })
     }
   })
 }
@@ -32,7 +33,7 @@ export const verifyAdminWithToken = (req, res, next) => {
     if (req.user.isAdmin === true) {
       next()
     } else {
-      res.status(403).json({ message: 'you are not allowed to do that' })
+      return res.status(401).json({ message: messages.UNAUTHORIZED })
     }
   })
 }

@@ -9,6 +9,7 @@ import sendEmail from '../helpers/sendEmail.js'
 import { createOrderTemplate } from '../helpers/orderConfirmation.js'
 import { config } from '../config/config.js'
 import ConfirmOrder from '../models/confirmOrder.model.js'
+import { messages } from '../utils/constants.js'
 
 const instance = new Razorpay({
   key_id: config.razorPayKeyId,
@@ -30,9 +31,12 @@ export const checkout = async (req, res) => {
       quantity: 1
     })
 
-    if (!dbProduct) return res.status(404).json({ success: false, message: 'Sorry! Unable to find this product.' })
-    if (dbProduct.quantity < 1)
-      return res.status(404).json({ success: false, message: 'Sorry! This products is currently out of stock' })
+    if (!dbProduct) {
+      return res.status(404).json({ message: messages.NOT_FOUND })
+    }
+    if (dbProduct.quantity < 1) {
+      return res.status(400).json({ message: messages.OUT_OF_STOCK })
+    }
 
     price = dbProduct.price * req.body.product.quantity
     req.finalProduct = { ...dbProduct._doc, ...req.body.product } //appending dbProduct info with user product info so that i can store the value in db
@@ -66,7 +70,7 @@ export const checkout = async (req, res) => {
     const [cartt] = cart //removing array brackets
 
     if (!cartt) {
-      return res.status(404).json({ message: 'no products found on your cart' })
+      return res.status(404).json({ message: messages.NOT_FOUND })
     }
 
     cartt.products.forEach(product => {
@@ -117,6 +121,7 @@ export const checkout = async (req, res) => {
     })
   } catch (error) {
     console.log(error)
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
@@ -128,7 +133,9 @@ export const paymentVerify = async (req, res) => {
   if (expectedSignature === razorpay_signature) {
     try {
       const dbOrder = await Order.findOneAndDelete({ 'order.id': razorpay_order_id })
-      if (!dbOrder) return res.status(400).json({ error: 'session timeout' })
+      if (!dbOrder) {
+        return res.status(404).json({ message: messages.NOT_FOUND })
+      }
       const data = { ...dbOrder._doc, paymentStatus: true, paymentInfo: req.body }
 
       await ConfirmOrder.create(data)
@@ -159,11 +166,11 @@ export const paymentVerify = async (req, res) => {
       }
     } catch (error) {
       console.log(error)
-      return res.status(400).json({ success: false, message: 'failed to process your information' })
+      return res.status(500).json({ message: messages.INTERNAL_ERROR })
     }
     return res.redirect(`${config.frontendUrl}/paymentSuccess?reference=${razorpay_payment_id}`)
   } else {
-    return res.status(400).json({ success: false, signatureIsValid: false })
+    return res.status(500).json({ message: messages.INTERNAL_ERROR })
   }
 }
 
