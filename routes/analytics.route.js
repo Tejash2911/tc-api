@@ -11,21 +11,21 @@ import {
 const router = express.Router()
 
 // get top products for chart
-router.get('/topproducts', getTopProducts)
+router.get('/top-products', getTopProducts)
 
 // Sales statistics route
 router.get('/sales', getSales)
 
 // get popular size and color for chart
-router.get('/popularsizecolor', getPopularSizeColor)
+router.get('/popular-size-color', getPopularSizeColor)
 
 // get orders for stats
 router.get('/order', getOrdersForStats)
 
 // get order price for stats
-router.get('/orderprice', getOrderPriceForStats)
+router.get('/order-price', getOrderPriceForStats)
 
 // get top categories for chart
-router.get('/topcat', getTopCategories)
+router.get('/top-cat', getTopCategories)
 
 export default router

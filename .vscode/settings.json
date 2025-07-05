@@ -45,7 +45,12 @@
   "editor.linkedEditing": true,
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": [
+    "Tejash",
     "Cloudinary",
-    "razorpay"
+    "razorpay",
+    "maxlength",
+    "Neue",
+    "vmin",
+    "CRYPTOJS"
   ]
 }

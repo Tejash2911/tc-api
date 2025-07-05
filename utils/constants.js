@@ -1,5 +1,5 @@
 // Response Messages
-export const messages = {
+const _messages = {
   // Error Messages
   NOT_FOUND: 'Resource not found',
   BAD_REQUEST: 'Invalid request',
@@ -60,3 +60,5 @@ export const messages = {
   ORDER_DELETED: 'Order deleted successfully',
   ORDER_STATUS_UPDATED: 'Order status updated successfully'
 }
+
+export const messages = Object.freeze(_messages)

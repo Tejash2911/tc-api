@@ -67,15 +67,15 @@ export const checkout = async (req, res) => {
       }
     ])
 
-    const [cartt] = cart //removing array brackets
+    const [nCart] = cart //removing array brackets
 
-    if (!cartt) {
+    if (!nCart) {
       return res.status(404).json({ message: messages.NOT_FOUND })
     }
 
-    cartt.products.forEach(product => {
+    nCart.products.forEach(product => {
       //merging user cart product with db product info like price n all which are dynamic
-      const productInfo = cartt.productInfo.find(info => `${info._id}` === `${product.productID}`) //converted to string because when i was checking === it was checking the refrence on the memory not value bcz its an Objectid is an refrence ty[e]
+      const productInfo = nCart.productInfo.find(info => `${info._id}` === `${product.productID}`) //converted to string because when i was checking === it was checking the reference on the memory not value bcz its an Objectid is an reference type
       mergedProducts.push({ ...product, ...productInfo })
     })
 
