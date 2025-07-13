@@ -87,54 +87,69 @@ export const getAllProducts = async (req, res) => {
   try {
     // Base query
     let query = Product.find()
+    let filter = {}
 
-    // Filter array
-    const filterArr = []
+    // Build filters
+    const filters = []
 
-    // Check if search string is provided
+    // Search filter
     if (qs) {
-      // Ensure search is applied correctly
-      filterArr.push({
+      filters.push({
         $or: [
           { title: { $regex: qs, $options: 'i' } },
           { productNo: { $regex: qs, $options: 'i' } },
           { desc: { $regex: qs, $options: 'i' } },
-          { categories: { $in: [qs] } }
+          { categories: { $regex: qs, $options: 'i' } }
         ]
       })
     }
 
-    // Apply other filters if provided
-    if (qCategory) filterArr.push({ categories: { $in: [qCategory] } })
-    if (qColor) filterArr.push({ color: { $in: [qColor] } })
-    if (qSize) filterArr.push({ size: { $in: [qSize] } })
-
-    if (filterArr.length > 0) {
-      query = query.find({ $and: filterArr })
+    // Category filter
+    if (qCategory) {
+      filters.push({ categories: { $in: [qCategory] } })
     }
+
+    // Color filter
+    if (qColor) {
+      filters.push({ color: { $in: [qColor] } })
+    }
+
+    // Size filter
+    if (qSize) {
+      filters.push({ size: { $in: [qSize] } })
+    }
+
+    // Apply filters if any exist
+    if (filters.length > 0) {
+      filter = { $and: filters }
+    }
+
+    // Apply filters to query
+    query = query.find(filter)
 
     // Sorting logic
     switch (qSort) {
       case 'newest':
-        query.sort({ createdAt: -1 })
+        query.sort({ createdAt: -1, _id: -1 }) // Add _id as secondary sort
         break
       case 'price-asc':
-        query.sort({ price: 1 })
+        query.sort({ price: 1, _id: 1 }) // Add _id as secondary sort
         break
       case 'price-desc':
-        query.sort({ price: -1 })
+        query.sort({ price: -1, _id: -1 }) // Add _id as secondary sort
         break
       case 'top-purchased':
-        query.sort({ purchasedCount: -1 })
+        query.sort({ purchasedCount: -1, _id: -1 }) // Add _id as secondary sort
         break
       case 'top-rated':
-        query.sort({ ratingsAverage: -1, ratingsQuantity: -1 })
+        query.sort({ ratingsAverage: -1, ratingsQuantity: -1, _id: -1 }) // Add _id as secondary sort
         break
       case 'top-reviewed':
-        query.sort({ ratingsQuantity: -1 })
+        query.sort({ ratingsQuantity: -1, _id: -1 }) // Add _id as secondary sort
         break
       default:
         // No sorting if the query doesn't match known values
+        query.sort({ _id: -1 }) // Default sort by _id
         break
     }
 
@@ -145,7 +160,7 @@ export const getAllProducts = async (req, res) => {
     const products = await query.exec()
 
     // Count documents with filters
-    const totalCount = await Product.countDocuments(filterArr.length > 0 ? { $and: filterArr } : {})
+    const totalCount = await Product.countDocuments(filter)
 
     return res.status(200).json({ data: products, totalCount })
   } catch (error) {

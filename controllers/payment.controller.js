@@ -21,69 +21,47 @@ export const checkout = async (req, res) => {
   let cart = undefined
   const mergedProducts = []
 
-  if (req.body.type === 'product') {
-    //if req is for single product
-    const dbProduct = await Product.findById(req.body.product.productID, {
-      price: 1,
-      img: 1,
-      title: 1,
-      _id: 0,
-      quantity: 1
-    })
-
-    if (!dbProduct) {
-      return res.status(404).json({ message: messages.NOT_FOUND })
-    }
-    if (dbProduct.quantity < 1) {
-      return res.status(400).json({ message: messages.OUT_OF_STOCK })
-    }
-
-    price = dbProduct.price * req.body.product.quantity
-    req.finalProduct = { ...dbProduct._doc, ...req.body.product } //appending dbProduct info with user product info so that i can store the value in db
-  } else if (req.body.type === 'cart') {
-    //if req is for whole cart
-    cart = await Cart.aggregate([
-      { $match: { userID: req.user.id } },
-      {
-        $lookup: {
-          from: 'products',
-          localField: 'products.productID',
-          foreignField: '_id',
-          as: 'productInfo'
-        }
-      },
-      {
-        $project: {
-          userID: 1,
-          products: { productID: 1, size: 1, color: 1, quantity: 1 },
-          productInfo: {
-            productNo: 1,
-            _id: 1,
-            price: 1,
-            title: 1,
-            img: 1
-          }
+  cart = await Cart.aggregate([
+    { $match: { userID: req.user.id } },
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'products.productID',
+        foreignField: '_id',
+        as: 'productInfo'
+      }
+    },
+    {
+      $project: {
+        userID: 1,
+        products: { productID: 1, size: 1, color: 1, quantity: 1 },
+        productInfo: {
+          productNo: 1,
+          _id: 1,
+          price: 1,
+          title: 1,
+          img: 1
         }
       }
-    ])
-
-    const [nCart] = cart //removing array brackets
-
-    if (!nCart) {
-      return res.status(404).json({ message: messages.NOT_FOUND })
     }
+  ])
 
-    nCart.products.forEach(product => {
-      //merging user cart product with db product info like price n all which are dynamic
-      const productInfo = nCart.productInfo.find(info => `${info._id}` === `${product.productID}`) //converted to string because when i was checking === it was checking the reference on the memory not value bcz its an Objectid is an reference type
-      mergedProducts.push({ ...product, ...productInfo })
-    })
+  const [nCart] = cart //removing array brackets
 
-    //calculating total price
-    price = await mergedProducts.reduce((total, item) => {
-      return total + item.price * item.quantity
-    }, 0)
+  if (!nCart) {
+    return res.status(404).json({ message: messages.NOT_FOUND })
   }
+
+  nCart.products.forEach(product => {
+    //merging user cart product with db product info like price n all which are dynamic
+    const productInfo = nCart.productInfo.find(info => `${info._id}` === `${product.productID}`) //converted to string because when i was checking === it was checking the reference on the memory not value bcz its an Objectid is an reference type
+    mergedProducts.push({ ...product, ...productInfo })
+  })
+
+  //calculating total price
+  price = await mergedProducts.reduce((total, item) => {
+    return total + item.price * item.quantity
+  }, 0)
 
   const options = {
     amount: Number((price * 100).toFixed(2)), // amount in the smallest currency unit && toFIxed: it will only allow two decimal values after .
@@ -96,13 +74,14 @@ export const checkout = async (req, res) => {
     const dbOrder = await Order.create({
       // Saving to db
       userID: req.user.id,
-      type: req.body.type, // is it cart payment or a single product payment
-      products: req.finalProduct || mergedProducts,
+      type: 'cart',
+      products: mergedProducts,
       price: Number(price.toFixed(2)),
       userInfo: {
         address: req.body.userInfo.address,
         name: req.body.userInfo.name,
-        email: req.body.userInfo.email
+        email: req.body.userInfo.email,
+        number: req.body.userInfo.number
       },
       order: response
     })
